@@ -308,10 +308,23 @@ document
   .addEventListener("click", login);
     
   document
+  document
   .getElementById("createAccountButton")
   .addEventListener("click", showCreateAccount);
-    function showCreateAccount() {
-  alert("Create account works!");
+
+document
+  .getElementById("backToLoginButton")
+  .addEventListener("click", showLogin);
+
+function showCreateAccount() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("registerScreen").style.display = "block";
+}
+
+function showLogin() {
+  document.getElementById("registerScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+}
 }
 
 async function logout() {
