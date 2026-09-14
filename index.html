@@ -198,8 +198,8 @@
 
   <button id="loginButton" type="button">Log in</button>
 
-<button id="createAccountButton" type="button">
-  Create account
+<button type="button" onclick="requestAccount()">
+  Request account
 </button>
 
 <div id="loginMessage"></div>
@@ -324,7 +324,52 @@ function showLogin() {
   document.getElementById("registerScreen").style.display = "none";
   document.getElementById("loginScreen").style.display = "block";
 }
+async function requestAccount() {
+  const name = document.getElementById("registerName").value.trim();
+  const username = document.getElementById("registerUsername").value.trim();
+  const email = document.getElementById("registerEmail").value.trim();
+  const password = document.getElementById("registerPassword").value;
+  const confirmPassword =
+    document.getElementById("registerConfirmPassword").value;
 
+  const message = document.getElementById("registerMessage");
+
+  if (!name || !username || !email || !password || !confirmPassword) {
+    message.textContent = "Please complete all fields.";
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    message.textContent = "Passwords do not match.";
+    return;
+  }
+
+  if (password.length < 6) {
+    message.textContent = "Password must be at least 6 characters.";
+    return;
+  }
+
+  message.textContent = "Sending account request...";
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      data: {
+        full_name: name,
+        username: username
+      }
+    }
+  });
+
+  if (error) {
+    message.textContent = "Account request failed: " + error.message;
+    return;
+  }
+
+  message.textContent =
+    "Account request sent. Please wait for approval.";
+}
 async function logout() {
   await supabaseClient.auth.signOut();
 
