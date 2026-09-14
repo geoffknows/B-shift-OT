@@ -125,10 +125,83 @@
     .legend-off {
       background: #eeeeee;
     }
+    .login-box {
+  max-width: 360px;
+  margin: 40px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.login-box input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.login-box button,
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  font-size: 16px;
+}
+
+#loginMessage {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+#appContent {
+  display: none;
+}
+
+.user-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logout-btn {
+  width: auto;
+  padding: 8px 12px;
+  margin: 0;
+}
   </style>
 </head>
 
 <body>
+  <div id="loginScreen" class="login-box">
+  <h1>B Shift OT</h1>
+
+  <input
+    id="loginEmail"
+    type="email"
+    placeholder="Email"
+  />
+
+  <input
+    id="loginPassword"
+    type="password"
+    placeholder="Password"
+  />
+
+  <button onclick="login()">Log in</button>
+
+  <div id="loginMessage"></div>
+</div>
+
+<div id="appContent">
   <div class="app">
     <h1>B Shift OT</h1>
 
@@ -166,6 +239,90 @@ const supabaseClient = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+    async function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
+
+  message.textContent = "Logging in...";
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = error.message;
+    return;
+  }
+
+  await showLoggedInApp(data.user);
+}
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+
+  document.getElementById("loginScreen").style.display = "block";
+  document.getElementById("appContent").style.display = "none";
+}
+
+async function showLoggedInApp(user) {
+  const { data: profile, error } = await supabaseClient
+    .from("profiles")
+    .select("full_name, username, role, approval_status")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    document.getElementById("loginMessage").textContent =
+      "Could not load your profile.";
+    return;
+  }
+
+  if (profile.approval_status !== "approved") {
+    await supabaseClient.auth.signOut();
+
+    document.getElementById("loginMessage").textContent =
+      "Your account is waiting for approval.";
+    return;
+  }
+
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appContent").style.display = "block";
+
+  const app = document.querySelector(".app");
+
+  let existingBar = document.getElementById("userBar");
+
+  if (!existingBar) {
+    const bar = document.createElement("div");
+    bar.id = "userBar";
+    bar.className = "user-bar";
+
+    bar.innerHTML = `
+      <div>
+        <strong>${profile.full_name}</strong>
+        ${profile.role === "admin" ? " · Admin" : ""}
+      </div>
+
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    `;
+
+    app.insertBefore(bar, app.children[1]);
+  }
+}
+
+async function checkLogin() {
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    await showLoggedInApp(session.user);
+  }
+}
+
+checkLogin();
   // B Shift rota:
   // 15 September 2026 = first DAY shift
   const rotaPattern = ["DAY", "DAY", "NIGHT", "NIGHT", "OFF", "OFF", "OFF", "OFF"];
@@ -274,6 +431,6 @@ const supabaseClient = supabase.createClient(
 
   // Start the calendar
   renderCalendar();
-  </script>
+  </script</div>
   </body>
 </html>
