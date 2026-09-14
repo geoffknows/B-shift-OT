@@ -156,8 +156,16 @@
       <span class="legend-off">Off</span>
     </div>
   </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    const SUPABASE_URL = "https://ilmgkxfekvtdpwgjhgqn.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_uXzAZiKEQ3Mx1pUMgNBHpA_5JGO5BVK";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
   // B Shift rota:
   // 15 September 2026 = first DAY shift
   const rotaPattern = ["DAY", "DAY", "NIGHT", "NIGHT", "OFF", "OFF", "OFF", "OFF"];
@@ -267,3 +275,5 @@
   // Start the calendar
   renderCalendar();
   </script>
+  </body>
+</html>
