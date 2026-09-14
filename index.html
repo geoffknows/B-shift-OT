@@ -158,33 +158,112 @@
   </div>
 
   <script>
-    const rotaStart = new Date(2026, 8, 15);
-    const rotaPattern = [
-      "DAY",
-      "DAY",
-      "NIGHT",
-      "NIGHT",
-      "OFF",
-      "OFF",
-      "OFF",
-      "OFF"
-    ];
+  // B Shift rota:
+  // 15 September 2026 = first DAY shift
+  const rotaPattern = ["DAY", "DAY", "NIGHT", "NIGHT", "OFF", "OFF", "OFF", "OFF"];
 
-    let currentDate = new Date(2026, 8, 1);
+  let displayYear = 2026;
+  let displayMonth = 8; // September (January = 0)
 
-    function getShiftForDate(date) {
-      const oneDay = 1000 * 60 * 60 * 24;
+  function getShift(year, month, day) {
+    const start = Date.UTC(2026, 8, 15);
+    const target = Date.UTC(year, month, day);
 
-      const startUTC = Date.UTC(
-        rotaStart.getFullYear(),
-        rotaStart.getMonth(),
-        rotaStart.getDate()
+    const daysDifference = Math.round(
+      (target - start) / 86400000
+    );
+
+    const rotaPosition =
+      ((daysDifference % 8) + 8) % 8;
+
+    return rotaPattern[rotaPosition];
+  }
+
+  function renderCalendar() {
+    const calendar = document.getElementById("calendar");
+    const title = document.getElementById("monthTitle");
+
+    calendar.innerHTML = "";
+
+    const monthName = new Date(
+      displayYear,
+      displayMonth,
+      1
+    ).toLocaleDateString("en-GB", {
+      month: "long",
+      year: "numeric"
+    });
+
+    title.textContent = monthName;
+
+    // Work out which weekday the month starts on.
+    // Convert Sunday=0 into Monday-first format.
+    let firstWeekday =
+      new Date(displayYear, displayMonth, 1).getDay();
+
+    firstWeekday =
+      firstWeekday === 0 ? 6 : firstWeekday - 1;
+
+    // Blank spaces before the 1st of the month
+    for (let i = 0; i < firstWeekday; i++) {
+      const blank = document.createElement("div");
+      blank.className = "day empty";
+      calendar.appendChild(blank);
+    }
+
+    const numberOfDays =
+      new Date(displayYear, displayMonth + 1, 0).getDate();
+
+    for (let day = 1; day <= numberOfDays; day++) {
+      const shift = getShift(
+        displayYear,
+        displayMonth,
+        day
       );
 
-      const dateUTC = Date.UTC(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-      );
+      const box = document.createElement("div");
+      box.className = "day";
 
-      const difference = Math.floor((
+      const number = document.createElement("div");
+      number.className = "day-number";
+      number.textContent = day;
+
+      const label = document.createElement("div");
+      label.className = "shift-label";
+
+      if (shift === "DAY") {
+        label.classList.add("day-shift");
+        label.textContent = "DAY";
+      } else if (shift === "NIGHT") {
+        label.classList.add("night-shift");
+        label.textContent = "NIGHT";
+      } else {
+        label.classList.add("off-shift");
+        label.textContent = "OFF";
+      }
+
+      box.appendChild(number);
+      box.appendChild(label);
+      calendar.appendChild(box);
+    }
+  }
+
+  function changeMonth(direction) {
+    displayMonth += direction;
+
+    if (displayMonth > 11) {
+      displayMonth = 0;
+      displayYear++;
+    }
+
+    if (displayMonth < 0) {
+      displayMonth = 11;
+      displayYear--;
+    }
+
+    renderCalendar();
+  }
+
+  // Start the calendar
+  renderCalendar();
+  </script>
